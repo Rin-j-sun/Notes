@@ -1,3 +1,17 @@
+header{
+  background-color: lightgreen;
+  height: 60px;
+  margin-bottom: 30px;
+}
+h1{
+  margin-top: 0;
+  padding: 11px 10px 0 72vh;
+}
+
+.new{
+  color: lightgreen;
+}
+
 .columns {
   display: flex;
   gap: 20px;

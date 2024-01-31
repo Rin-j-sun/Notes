@@ -1,83 +1,94 @@
-const app = new Vue({
-    el: "#app",
+new Vue({
+    el: '#app',
     data: {
         column1: [
             {
-                title: "Карточка 1",
-                items: [
-                    { text: "Пункт 1", checked: false },
-                    { text: "Пункт 2", checked: false },
-                    { text: "Пункт 3", checked: false }
-                ],
+                title: 'Карточка 1',
+                items: [{ text: 'Пункт 1', checked: false }, { text: 'Пункт 2', checked: false }, { text: 'Пункт 3', checked: false }],
                 percentComplete: 0,
-                date: null
-            }
+                date: '',
+            },
+            // Другие карточки для первого столбца
         ],
         column2: [
             {
-                title: "Карточка 2",
-                items: [
-                    { text: "Пункт 1", checked: false },
-                    { text: "Пункт 2", checked: false },
-                    { text: "Пункт 3", checked: false },
-                    { text: "Пункт 4", checked: false },
-                    { text: "Пункт 5", checked: false }
-                ],
+                title: 'Карточка 4',
+                items: [{ text: 'Пункт 1', checked: false }, { text: 'Пункт 2', checked: false }, { text: 'Пункт 3', checked: false }],
                 percentComplete: 0,
-                date: null
-            }
+                date: '',
+            },
+            // Другие карточки для второго столбца
         ],
-        column3: []
+        column3: [
+            {
+                title: 'Карточка 6',
+                items: [{ text: 'Пункт 1', checked: false }, { text: 'Пункт 2', checked: false }, { text: 'Пункт 3', checked: false }],
+                percentComplete: 0,
+                date: '',
+            },
+            // Другие карточки для третьего столбца
+        ],
+        newCardTitle: '',
+        newCardItems: [{ text: '' }],
     },
     methods: {
-        updatePercentComplete(card) {
-            let doneCount = 0;
-            for (const item of card.items) {
-                if (item.checked) {
-                    doneCount++;
-                }
-            }
-            card.percentComplete = (doneCount / card.items.length) * 100;
-            if (card.percentComplete === 100) {
-                card.date = new Date().toLocaleString();
-            }
+        addNewItem() {
+            this.newCardItems.push({ text: '' });
         },
-        moveCardToNextColumn(card, currentColumn, nextColumn) {
-            nextColumn.push(card);
-            currentColumn.splice(currentColumn.indexOf(card), 1);
-        }
+        createNewCard(column) {
+            if (column === 1 && this.column1.length < 3) {
+                this.column1.push({
+                    title: this.newCardTitle,
+                    items: this.newCardItems.map(item => ({ text: item.text, checked: false })),
+                    percentComplete: 0,
+                    date: '',
+                });
+            } else if (column === 2 && this.column2.length < 5) {
+                this.column2.push({
+                    title: this.newCardTitle,
+                    items: this.newCardItems.map(item => ({ text: item.text, checked: false })),
+                    percentComplete: 0,
+                    date: '',
+                });
+            } else if (column === 3) {
+                this.column3.push({
+                    title: this.newCardTitle,
+                    items: this.newCardItems.map(item => ({ text: item.text, checked: false })),
+                    percentComplete: 0,
+                    date: '',
+                });
+            }
+            this.newCardTitle = '';
+            this.newCardItems = [{ text: '' }];
+        },
+        updateCompletion(card, column) {
+            // Логика для обновления процента выполнения и переноса карточек между столбцами
+        },
     },
     watch: {
         column1: {
             handler() {
-                const doneCardsCount = this.column2.filter(
-                    (card) => card.percentComplete === 100
-                ).length;
-                if (doneCardsCount < this.column2.length) {
-                    const inProgressCount = this.column1.filter(
-                        (card) => card.percentComplete > 50
-                    ).length;
-                    if (inProgressCount > 0) {
-                        this.column1 = [];
-                    }
+                for (const card of this.column1) {
+                    this.updateCompletion(card, 'column1');
                 }
             },
-            deep: true
+            deep: true,
         },
         column2: {
-            handler(newVal) {
-                const inProgressCard = newVal.find(
-                    (card) => card.percentComplete > 50
-                );
-                if (newVal.length === 5 && inProgressCard) {
-                    this.moveCardToNextColumn(
-                        inProgressCard,
-                        this.column2,
-                        this.column3
-                    );
+            handler() {
+                for (const card of this.column2) {
+                    this.updateCompletion(card, 'column2');
                 }
             },
-            deep: true
-        }
-    }
+            deep: true,
+        },
+        column3: {
+            handler() {
+                for (const card of this.column3) {
+                    this.updateCompletion(card, 'column3');
+                }
+            },
+            deep: true,
+        },
+    },
 });
