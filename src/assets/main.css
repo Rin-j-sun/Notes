@@ -1,129 +1,32 @@
-body {
-  font-family: tahoma;
-  color:#282828;
+.columns {
+  display: flex;
+  gap: 20px;
+}
+
+.column {
+  flex: 1;
+}
+
+.card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.card h3 {
   margin: 0;
 }
-/*Зелёная линия*/
-header{
-  height: 50px;
-  background: lightseagreen;
-  margin-bottom: 20px;
-}
-h2{
-  margin-top: 0;
+
+ul {
+  margin: 0;
+  padding: 0;
 }
 
-/*Стили размеров*/
-/*стильконтейнера*/
-.sizes_block{
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  height: 30px;
-  width: 200px;
-}
-.sizes{
-
-}
-/*стиль ссылки*/
-.size:hover{
-  color: black;
+li {
+  list-style-type: none;
+  margin-bottom: 5px;
 }
 
-.text{
-  text-decoration: line-through
-} /*зачёркивание текста*/
-
-.nav-bar {
-  background: linear-gradient(-90deg, #84CF6A, #16C0B0);
-  height: 60px;
-  margin-bottom: 15px;
-}
-
-.product {
-  display: flex;
-  flex-flow: wrap;
-  padding: 1rem;
-}
-
-img {
-  border: 1px solid #d8d8d8;
-  width: 70%;
-  margin: 40px;
-  box-shadow: 0 .5px 1px #d8d8d8;
-}
-
-.product-image {
-  width: 80%;
-}
-
-.product-image,
-.product-info {
-  margin-top: 10px;
-  width: 50%;
-}
-
-.color-box {
-  width: 40px;
-  height: 40px;
-  margin-top: 5px;
-}
-
-.cart {
-  margin-right: 25px;
-  float: right;
-  border: 1px solid #d8d8d8;
-  padding: 5px 20px;
-}
-
-button {
-  margin-top: 30px;
-  border: none;
-  background-color: #1E95EA;
-  color: white;
-  height: 40px;
-  width: 100px;
-  font-size: 14px;
-}
-
-.disabledButton {
-  background-color: #d8d8d8;
-}
-/*неактивная ссылка*/
-.disabledLink {
-  background-color: #d8d8d8;
-  color: white;
-}
-/*неактивная ссылка*/
-.disabledLink .size:hover {
-  color: white;
-}
-
-.review-form {
-  width: 400px;
-  padding: 20px;
-  margin: 40px;
-  border: 1px solid #d8d8d8;
-}
-
-input {
-  width: 100%;
-  height: 25px;
-  margin-bottom: 20px;
-}
-
-textarea {
-  width: 100%;
-  height: 60px;
-}
-
-.tab {
-  margin-left: 20px;
-  cursor: pointer;
-}
-
-.activeTab {
-  color: #16C0B0;
-  text-decoration: underline;
+input[type="checkbox"] {
+  margin-right: 5px;
 }

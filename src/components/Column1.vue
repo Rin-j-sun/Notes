@@ -6,32 +6,42 @@
 <!--метод deleteCard и передается индекс карточки, которую нужно удалить, через событие deleteCard.-->
 
 
+<template>
+  <div class="column">
+    <h2>Column 1</h2>
+    <div class="card-container">
+      <div v-for="(card, index) in cards" :key="index" class="card">
+        <h3>{{ card.title }}</h3>
+        <ul>
+          <li v-for="(item, itemIndex) in card.items" :key="itemIndex" :class="{ completed: item.completed }">{{ item.text }}</li>
+        </ul>
+        <button @click="deleteCard(index)">Delete Card</button>
+      </div>
+    </div>
+    <button @click="addCard">Add Card</button>
+  </div>
+</template>
+
+<script>
 export default {
-name: 'Column',
-props: {
-cards: {
-type: Array,
-required: true
+  name: 'Column1',
+  props: {
+    cards: {
+      type: Array,
+      required: true
+    }
+  },
+  methods: {
+    addCard() {
+      const newCard = {
+        title: 'New Card',
+        items: []
+      }
+      this.$emit('addCard', newCard)
+    },
+    deleteCard(cardIndex) {
+      this.$emit('deleteCard', cardIndex)
+    }
+  }
 }
-},
-methods: {
-addCard() {
-const newCard = {
-title: 'New Card',
-items: []
-}
-this.$emit('addCard', newCard)
-},
-deleteCard(cardIndex) {
-this.$emit('deleteCard', cardIndex)
-},
-changeStatus(cardIndex, newStatus) {
-this.cards[cardIndex].status = newStatus
-},
-moveCard(cardIndex, targetColumn) {
-const card = this.cards[cardIndex]
-this.cards.splice(cardIndex, 1)
-targetColumn.push(card)
-}
-}
-}
+</script>
