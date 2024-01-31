@@ -18,41 +18,45 @@
 </header>
 
 <div id="app">
+    <form @submit.prevent="createCard">
+        <input type="text" v-model="cardTitle" placeholder="Введите заголовок карточки" required>
+        <button type="submit">Создать</button>
+    </form>
     <div class="columns">
-        <div class="column">
+        <div class="column" id="column1">
             <h2>Первый столбец</h2>
-            <div v-for="(card, index) in column1" :key="index" class="card">
+            <div v-for="card in column1" :key="card.id" class="card">
                 <h3>{{ card.title }}</h3>
                 <ul>
-                    <li v-for="(item, itemIndex) in card.items" :key="itemIndex">
-                        <input type="checkbox" v-model="item.checked">{{ item.text }}
+                    <li v-for="item in card.items" :key="item.id">
+                        <input type="checkbox" v-model="item.completed">
+                        <span :class="{ 'completed': item.completed }">{{ item.text }}</span>
                     </li>
                 </ul>
-                <p v-if="card.percentComplete === 100">Дата и время последнего выполненного пункта: {{ card.date }}</p>
             </div>
         </div>
-        <div class="column">
+        <div class="column" id="column2">
             <h2>Второй столбец</h2>
-            <div v-for="(card, index) in column2" :key="index" class="card">
+            <div v-for="card in column2" :key="card.id" class="card">
                 <h3>{{ card.title }}</h3>
                 <ul>
-                    <li v-for="(item, itemIndex) in card.items" :key="itemIndex">
-                        <input type="checkbox" v-model="item.checked">{{ item.text }}
+                    <li v-for="item in card.items" :key="item.id">
+                        <input type="checkbox" v-model="item.completed">
+                        <span :class="{ 'completed': item.completed }">{{ item.text }}</span>
                     </li>
                 </ul>
-                <p v-if="card.percentComplete === 100">Дата и время последнего выполненного пункта: {{ card.date }}</p>
             </div>
         </div>
-        <div class="column">
+        <div class="column" id="column3">
             <h2>Третий столбец</h2>
-            <div v-for="(card, index) in column3" :key="index" class="card">
-                <h3>{{ card.title }}</h3>
+            <div v-for="card in column3" :key="card.id" class="card">
+                <h3>{{ card.title }} <span v-if="card.completed">(Завершено: {{ card.completedDate }})</span></h3>
                 <ul>
-                    <li v-for="(item, itemIndex) in card.items" :key="itemIndex">
-                        <input type="checkbox" v-model="item.checked">{{ item.text }}
+                    <li v-for="item in card.items" :key="item.id">
+                        <input type="checkbox" v-model="item.completed">
+                        <span :class="{ 'completed': item.completed }">{{ item.text }}</span>
                     </li>
                 </ul>
-                <p v-if="card.percentComplete === 100">Дата и время последнего выполненного пункта: {{ card.date }}</p>
             </div>
         </div>
     </div>

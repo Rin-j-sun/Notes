@@ -1,94 +1,91 @@
-new Vue({
+const app = new Vue({
     el: '#app',
     data: {
-        column1: [
-            {
-                title: 'Карточка 1',
-                items: [{ text: 'Пункт 1', checked: false }, { text: 'Пункт 2', checked: false }, { text: 'Пункт 3', checked: false }],
-                percentComplete: 0,
-                date: '',
-            },
-            // Другие карточки для первого столбца
-        ],
-        column2: [
-            {
-                title: 'Карточка 4',
-                items: [{ text: 'Пункт 1', checked: false }, { text: 'Пункт 2', checked: false }, { text: 'Пункт 3', checked: false }],
-                percentComplete: 0,
-                date: '',
-            },
-            // Другие карточки для второго столбца
-        ],
-        column3: [
-            {
-                title: 'Карточка 6',
-                items: [{ text: 'Пункт 1', checked: false }, { text: 'Пункт 2', checked: false }, { text: 'Пункт 3', checked: false }],
-                percentComplete: 0,
-                date: '',
-            },
-            // Другие карточки для третьего столбца
-        ],
-        newCardTitle: '',
-        newCardItems: [{ text: '' }],
+        cardTitle: '',
+        column1: [],
+        column2: [],
+        column3: []
+    },
+    mounted() {
+        this.loadCards();
     },
     methods: {
-        addNewItem() {
-            this.newCardItems.push({ text: '' });
-        },
-        createNewCard(column) {
-            if (column === 1 && this.column1.length < 3) {
-                this.column1.push({
-                    title: this.newCardTitle,
-                    items: this.newCardItems.map(item => ({ text: item.text, checked: false })),
-                    percentComplete: 0,
-                    date: '',
-                });
-            } else if (column === 2 && this.column2.length < 5) {
-                this.column2.push({
-                    title: this.newCardTitle,
-                    items: this.newCardItems.map(item => ({ text: item.text, checked: false })),
-                    percentComplete: 0,
-                    date: '',
-                });
-            } else if (column === 3) {
-                this.column3.push({
-                    title: this.newCardTitle,
-                    items: this.newCardItems.map(item => ({ text: item.text, checked: false })),
-                    percentComplete: 0,
-                    date: '',
-                });
+        createCard() {
+            if (this.cardTitle !== '') {
+                const newCard = {
+                    id: Date.now(),
+                    title: this.cardTitle,
+                    items: [
+                        { id: 1, text: '', completed: false },
+                        { id: 2, text: '', completed: false },
+                        { id: 3, text: '', completed: false }
+                    ],
+                    completedItems: 0,
+                    completedDate: ''
+                };
+
+                this.column1.push(newCard);
+                this.cardTitle = '';
+                this.saveCards();
             }
-            this.newCardTitle = '';
-            this.newCardItems = [{ text: '' }];
         },
-        updateCompletion(card, column) {
-            // Логика для обновления процента выполнения и переноса карточек между столбцами
+        updateCardStatus() {
+            this.column1.forEach(card => {
+                const completedItems = card.items.filter(item => item.completed).length;
+                const completionPercentage = (completedItems / card.items.length) * 100;
+
+                if (completionPercentage >= 50) {
+                    card.completedItems = completedItems;
+                    this.column2.push(card);
+                    this.column1 = this.column1.filter(c => c.id !== card.id);
+                }
+            });
+
+            this.column2.forEach(card => {
+                const completedItems = card.items.filter(item => item.completed).length;
+                const completionPercentage = (completedItems / card.items.length) * 100;
+
+                if (completionPercentage === 100) {
+                    card.completedItems = completedItems;
+                    card.completedDate = new Date().toLocaleString();
+                    this.column3.push(card);
+                    this.column2 = this.column2.filter(c => c.id !== card.id);
+                }
+            });
+
+            this.saveCards();
         },
+        loadCards() {
+            const savedCards = JSON.parse(localStorage.getItem('cards'));
+
+            if (savedCards) {
+                this.column1 = savedCards.column1 || [];
+                this.column2 = savedCards.column2 || [];
+                this.column3 = savedCards.column3 || [];
+            }
+        },
+        saveCards() {
+            const cards = {
+                column1: this.column1,
+                column2: this.column2,
+                column3: this.column3
+            };
+
+            localStorage.setItem('cards', JSON.stringify(cards));
+        }
     },
     watch: {
-        column1: {
+        'column1': {
             handler() {
-                for (const card of this.column1) {
-                    this.updateCompletion(card, 'column1');
-                }
+                this.updateCardStatus();
             },
-            deep: true,
+            deep: true
         },
-        column2: {
+        'column2': {
             handler() {
-                for (const card of this.column2) {
-                    this.updateCompletion(card, 'column2');
-                }
+                this.updateCardStatus();
             },
-            deep: true,
-        },
-        column3: {
-            handler() {
-                for (const card of this.column3) {
-                    this.updateCompletion(card, 'column3');
-                }
-            },
-            deep: true,
-        },
-    },
+            deep: true
+        }
+    }
 });
