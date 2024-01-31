@@ -22,17 +22,22 @@ h1{
 /*класс столбца*/
 .column {
   width: 30%;
+  height: 120vh;
   background-color: darkseagreen;
   border: 1px solid black;
+  border-radius: 10%;
+  box-shadow: 4px 3px 22px darkgreen;
 }
 
 
 /*класс карточки*/
 .card {
+  width: 90%;
   border: 1px solid #ddd;
   padding: 10px;
-  margin-bottom: 10px;
+  margin: 10px 9px;
   background-color: green;
+  border-radius: 10%;
 }
 
 h2 {
@@ -46,4 +51,24 @@ ul {
 
 .completed {
   text-decoration: line-through;
+}
+
+/*body{*/
+/*  background-color: #282828;*/
+/*}*/
+
+button{
+  border-radius: 30%;
+}
+
+/*items{*/
+/*  border-radius: 30%;*/
+/*}*/
+
+h2{
+  margin-left: 17vh;
+}
+
+.add{
+  margin: 1vh 15vh;
 }

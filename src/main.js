@@ -11,72 +11,100 @@ Vue.component('todo-item', {
 Vue.component('columns', {
     template: `
       <div class="columns">
-          <column title="Важно" :cards="column1" @add-card="addCard('column1', $event)" @delete-card="deleteCard('column1', $event)" @save-local-storage="saveToLocalStorage"></column>
-          <column title="В процессе" :cards="column2" @add-card="addCard('column2', $event)" @delete-card="deleteCard('column2', $event)" @save-local-storage="saveToLocalStorage"></column>
-          <column title="Выполнено" :cards="column3" @add-card="addCard('column3', $event)" @delete-card="deleteCard('column3', $event)" @save-local-storage="saveToLocalStorage"></column>
+      <column title="Новые" :cards="newColumn" @add-card="addCard('newColumn', $event)" @delete-card="deleteCard('newColumn', $event)" @save-local-storage="saveToLocalStorage"></column>
+      <column title="В процессе" :cards="inProgressColumn" @delete-card="deleteCard('inProgressColumn', $event)" @save-local-storage="saveToLocalStorage"></column>
+      <column title="Закоченные" :cards="completedColumn" @delete-card="deleteCard('completedColumn', $event)" @save-local-storage="saveToLocalStorage"></column>
       </div>
-      `,
+    `,
     data() {
         return {
-            column1: [],
-            column2: [],
-            column3: []
+            newColumn: [],
+            inProgressColumn: [],
+            completedColumn: [],
+            maxCards: {
+                newColumn: 3,
+                inProgressColumn: 5,
+                completedColumn: Infinity
+            }
         }
     },
     created() {
         this.loadFromLocalStorage();
     },
     methods: {
-        //Ограничение на количество задач
         addCard(column, customTitle) {
-            if (column === 'column1' && this.column1.length >= 3) {
-                alert('Слишком много задач.');
+            const totalCards = this.newColumn.length + this.inProgressColumn.length + this.completedColumn.length;
+            if (totalCards >= this.maxCards.newColumn + this.maxCards.inProgressColumn + this.maxCards.completedColumn) {
+                alert(`Слишком много задач.`);
                 return;
             }
-            if (column === 'column2' && this.column2.length >= 5) {
-                alert('Слишком много выполняемых задач.');
+            if (this[column].length >= this.maxCards[column]) {
+                alert(`Слишком много задач. "${this.getColumnTitle(column)}".`);
                 return;
             }
-            const newCard = { title: customTitle || 'Новая заметка', items: [] };
+            if (column !== 'newColumn') {
+                alert(`Можно добавлять только новые заметки.`);
+                return;
+            }
+            const newCard = {
+                title: customTitle || 'Новая заметка',
+                items: [
+                    { text: '', completed: false, editing: true },
+                    { text: '', completed: false, editing: true },
+                    { text: '', completed: false, editing: true }
+                ],
+                status: 'Новые'
+            };
             this[column].push(newCard);
-            this.saveToLocalStorage(); // Сохраняем изменения при добавлении карточки
+            this.saveToLocalStorage();
         },
-        //Удаление карточки
         deleteCard(column, cardIndex) {
             this[column].splice(cardIndex, 1);
             this.saveToLocalStorage();
         },
-        //Сохранение при перезагрузке страницы
         saveToLocalStorage() {
             localStorage.setItem('todo-columns', JSON.stringify({
-                column1: this.column1,
-                column2: this.column2,
-                column3: this.column3
+                newColumn: this.newColumn,
+                inProgressColumn: this.inProgressColumn,
+                completedColumn: this.completedColumn
             }));
         },
-        //Выгрузка данных после перезагрузки
         loadFromLocalStorage() {
             const data = JSON.parse(localStorage.getItem('todo-columns'));
             if (data) {
-                this.column1 = data.column1 || [];
-                this.column2 = data.column2 || [];
-                this.column3 = data.column3 || [];
+                this.newColumn = data.newColumn || [];
+                this.inProgressColumn = data.inProgressColumn || [];
+                this.completedColumn = data.completedColumn || [];
+                // Состояния чекбоксов
+                this.newColumn.forEach(card => card.items.forEach(item => item.completed = !!item.completed));
+                this.inProgressColumn.forEach(card => card.items.forEach(item => item.completed = !!item.completed));
+                this.completedColumn.forEach(card => card.items.forEach(item => item.completed = !!item.completed));
+            }
+        },
+        getColumnTitle(column) {
+            switch (column) {
+                case 'newColumn':
+                    return 'Новые';
+                case 'inProgressColumn':
+                    return 'В процессе';
+                case 'completedColumn':
+                    return 'Закоченные';
+                default:
+                    return '';
             }
         }
     }
 });
 
-
-//Компонент столбца
 Vue.component('column', {
     props: ['title', 'cards'],
     template: `
       <div class="column">
-          <h2>{{ title }}</h2>
-          <card v-for="(card, index) in cards" :key="index" :card="card" @remove-card="deleteCard(index)" @save-local-storage="saveToLocalStorage"></card>
-          <button @click="addCardWithCustomTitle">Добавить заметку</button>
+      <h2>{{ title }}</h2>
+      <card v-for="(card, index) in cards" :key="index" :card="card" @delete-card="deleteCard(index)" @save-local-storage="saveToLocalStorage"></card>
+      <button class="add" v-if="title === 'Новые'" @click="addCardWithCustomTitle">Добавить заметку</button>
       </div>
-      `,
+    `,
     methods: {
         deleteCard(cardIndex) {
             this.$emit('delete-card', cardIndex);
@@ -84,81 +112,113 @@ Vue.component('column', {
         addCardWithCustomTitle() {
             const customTitle = prompt('Введите заголовок для новой заметки:');
             if (customTitle) {
-                this.$emit('create-card', customTitle);
+                this.$emit('add-card', customTitle);
             }
         },
         saveToLocalStorage() {
-            this.$emit('save-local-storage'); // Передаем событие сохранения изменений в родительский компонент
+            this.$emit('save-local-storage');
         }
     }
 });
 
-//компонент карточки
 Vue.component('card', {
     props: ['card'],
     template: `
       <div class="card">
-          <h3>{{ card.title }}</h3>
-          <ul>
-              <list-item v-for="(item, index) in card.items" :key="index" :item="item" @toggle-complete="toggleComplete(index)" @delete-item="deleteItem(index)"></list-item>
-          </ul>
+      <h3>{{ card.title }}</h3>
+      <ul>
+        <li v-for="(item, index) in card.items" :key="index">
+          <input type="text" v-model="item.text" :disabled="!item.editing">
+          <input type="checkbox" v-model="item.completed" @change="saveToLocalStorage">
+          <button @click="saveItem(index)" v-if="item.editing">Сохранить</button>
+          <button @click="editItem(index)" v-else>Редактировать</button>
+          <button @click="deleteItem(index)">Удалить</button>
+        </li>
+        <li v-if="card.items.length < 5 && card.status !== 'Закоченные'">
           <button @click="addItem">Добавить пункт</button>
-          <button @click="deleteCard">Удалить заметку</button>
+        </li>
+      </ul>
+      <button v-if="card.status !== 'Закоченные'" @click="deleteCard">Удалить заметку</button>
+      <p v-if="card.status === 'Закоченные'">Дата завершения: {{ card.completionDate }}</p>
       </div>
-      `,
+    `,
     methods: {
-        //добавление текста к чек-боксу
         addItem() {
-            const customText = prompt('Введите текст для нового пункта:');
-            if (customText) {
-                this.card.items.push({ text: customText, completed: false });
-                this.$emit('save-local-storage');
+            if (this.card.items.length < 5) {
+                this.card.items.push({ text: '', completed: false, editing: true });
+                this.saveToLocalStorage();
+            } else {
+                alert('Слишком много задач.');
             }
         },
-        //удаление карточки
+        deleteItem(index) {
+            this.card.items.splice(index, 1);
+            this.saveToLocalStorage();
+        },
         deleteCard() {
             this.$emit('delete-card');
         },
-        toggleComplete(index) {
-            if (!this.card.items[index].completed) {
-                this.card.items[index].completed = true;
-            } else {
-                this.card.items[index].completed = false;
-            }
+        saveItem(index) {
+            this.card.items[index].editing = false;
+            this.saveToLocalStorage();
+        },
+        editItem(index) {
+            this.card.items[index].editing = true;
+        },
+        saveToLocalStorage() {
+            this.checkCardStatus();
             this.$emit('save-local-storage');
         },
-        detem(index) {
-            this.card.items.splice(index, 1);
-            this.$emit('save-local-storage');
+        checkCardStatus() {
+            const completedItems = this.card.items.filter(item => item.completed).length;
+            const totalItems = this.card.items.length;
+            if (completedItems > 0 && completedItems === totalItems) {
+                this.card.status = 'Закоченные';
+                this.card.completionDate = new Date().toLocaleString();
+            } else if (completedItems > totalItems / 2) {
+                this.card.status = 'В процессе';
+            } else {
+                this.card.status = 'Новые';
+            }
         }
     }
 });
 
-//компонент для добавления заметок, форма
-Vue.component('list-item', {
-    props: ['item'],
-    template: `
-      <li>
-          <input type="checkbox" v-model="item.completed">
-          <span :class="{ completed: item.completed }">{{ item.text }}</span>
-          <button @click="$emit('delete-item')">Удалить</button>
-      </li>
-      `
-});
-
-//само приложение
 new Vue({
     el: '#app',
-    methods: {
-        saveLocalStorage() {
-            localStorage.setItem('todo-columns', JSON.stringify({
-                сolumn1: this.сolumn1,
-                сolumn2: this.сolumn2,
-                column3: this.column3
-            }));
+    data() {
+        return {
+            newColumn: [],
+            inProgressColumn: [],
+            completedColumn: [],
         }
     },
-    beforeUnmount() {
-        this.saveLocalStorage();
+    created() {
+        this.loadFromLocalStorage();
+    },
+    methods: {
+        deleteCard(column, cardIndex) {
+            this[column].splice(cardIndex, 1);
+            this.saveToLocalStorage();
+        },
+        saveToLocalStorage() {
+            localStorage.setItem('todo-columns', JSON.stringify({
+                newColumn: this.newColumn,
+                inProgressColumn: this.inProgressColumn,
+                completedColumn: this.completedColumn
+            }));
+        },
+        loadFromLocalStorage() {
+            const data = JSON.parse(localStorage.getItem('todo-columns'));
+            if (data) {
+                this.newColumn = data.newColumn || [];
+                this.inProgressColumn = data.inProgressColumn || [];
+                this.completedColumn = data.completedColumn || [];
+                // Установка состояния чекбоксов
+                this.newColumn.forEach(card => card.items.forEach(item => item.completed = !!item.completed));
+                this.inProgressColumn.forEach(card => card.items.forEach(item => item.completed = !!item.completed));
+                this.completedColumn.forEach(card => card.items.forEach(item => item.completed = !!item.completed));
+            }
+        },
     }
 });
