@@ -1,18 +1,27 @@
 const app = new Vue({
     el: '#app',
+
+
     data: {
+        // Заголовок карточки
         cardTitle: '',
         // Столбцы
         column1: [],
         column2: [],
         column3: []
     },
+    // монтирование, отображение самих заметок
     mounted() {
         this.loadCards();
     },
     methods: {
         // создание заметки
         createCard() {
+            if (column1 === 'column1' && this.column1.length >= 3) {
+                alert('Достигнуто максимальное количество карточек в первом столбце.');
+                return;
+            }
+            else {
             if (this.cardTitle !== '') {
                 const newCard = {
                     id: Date.now(),
@@ -30,12 +39,10 @@ const app = new Vue({
                 this.column1.push(newCard);
                 this.cardTitle = '';
                 this.saveCards();
-            }
+            }}
         },
         // Ещё функционал перемещения
         updateCardStatus() {
-
-
             this.column1.forEach(card => {
                 // константы для определения границы перемещения
                 const completedItems = card.items.filter(item => item.completed).length;

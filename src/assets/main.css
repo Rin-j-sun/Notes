@@ -12,21 +12,27 @@ h1{
   color: lightgreen;
 }
 
+/*класс контейнера со столбцами*/
 .columns {
   display: flex;
   justify-content: space-between;
   margin-top: 20px;
 }
 
+/*класс столбца*/
 .column {
   width: 30%;
+  background-color: darkseagreen;
+  border: 1px solid black;
 }
 
+
+/*класс карточки*/
 .card {
-  background-color: #f7f7f7;
   border: 1px solid #ddd;
   padding: 10px;
   margin-bottom: 10px;
+  background-color: green;
 }
 
 h2 {
