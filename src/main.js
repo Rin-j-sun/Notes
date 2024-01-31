@@ -2,6 +2,7 @@ const app = new Vue({
     el: '#app',
     data: {
         cardTitle: '',
+        // Столбцы
         column1: [],
         column2: [],
         column3: []
@@ -10,11 +11,13 @@ const app = new Vue({
         this.loadCards();
     },
     methods: {
+        // создание заметки
         createCard() {
             if (this.cardTitle !== '') {
                 const newCard = {
                     id: Date.now(),
                     title: this.cardTitle,
+                    // чек-боксы
                     items: [
                         { id: 1, text: '', completed: false },
                         { id: 2, text: '', completed: false },
@@ -29,11 +32,16 @@ const app = new Vue({
                 this.saveCards();
             }
         },
+        // Ещё функционал перемещения
         updateCardStatus() {
+
+
             this.column1.forEach(card => {
+                // константы для определения границы перемещения
                 const completedItems = card.items.filter(item => item.completed).length;
                 const completionPercentage = (completedItems / card.items.length) * 100;
 
+                // Когда больше 50% выполненеия
                 if (completionPercentage >= 50) {
                     card.completedItems = completedItems;
                     this.column2.push(card);
@@ -41,6 +49,7 @@ const app = new Vue({
                 }
             });
 
+            // Перемемещение из 2 столбца
             this.column2.forEach(card => {
                 const completedItems = card.items.filter(item => item.completed).length;
                 const completionPercentage = (completedItems / card.items.length) * 100;
@@ -55,6 +64,8 @@ const app = new Vue({
 
             this.saveCards();
         },
+
+        // какая-то загрузка карточек, влияние на проект неизвестно
         loadCards() {
             const savedCards = JSON.parse(localStorage.getItem('cards'));
 
@@ -64,6 +75,7 @@ const app = new Vue({
                 this.column3 = savedCards.column3 || [];
             }
         },
+        // сохранение при перезагрузке
         saveCards() {
             const cards = {
                 column1: this.column1,
@@ -74,6 +86,7 @@ const app = new Vue({
             localStorage.setItem('cards', JSON.stringify(cards));
         }
     },
+    // перемещение заметок по столбцам
     watch: {
         'column1': {
             handler() {

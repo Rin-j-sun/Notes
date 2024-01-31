@@ -24,7 +24,7 @@
     </form>
     <div class="columns">
         <div class="column" id="column1">
-            <h2>Первый столбец</h2>
+            <h2>Важно</h2>
             <div v-for="card in column1" :key="card.id" class="card">
                 <h3>{{ card.title }}</h3>
                 <ul>
@@ -36,7 +36,7 @@
             </div>
         </div>
         <div class="column" id="column2">
-            <h2>Второй столбец</h2>
+            <h2>В процессе</h2>
             <div v-for="card in column2" :key="card.id" class="card">
                 <h3>{{ card.title }}</h3>
                 <ul>
@@ -48,7 +48,7 @@
             </div>
         </div>
         <div class="column" id="column3">
-            <h2>Третий столбец</h2>
+            <h2>Выполнено</h2>
             <div v-for="card in column3" :key="card.id" class="card">
                 <h3>{{ card.title }} <span v-if="card.completed">(Завершено: {{ card.completedDate }})</span></h3>
                 <ul>
