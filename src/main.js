@@ -38,14 +38,17 @@ Vue.component('columns', {
                 alert(`Слишком много задач.`);
                 return;
             }
+
             if (this[column].length >= this.maxCards[column]) {
-                alert(`Слишком много задач. "${this.getColumnTitle(column)}".`);
+                alert(`Слишком много задач. Удалите одну из карточек. "${this.getColumnTitle(column)}".`);
                 return;
             }
             if (column !== 'newColumn') {
                 alert(`Можно добавлять только новые заметки.`);
                 return;
             }
+
+            // Создаем новую карточку
             const newCard = {
                 title: customTitle || 'Новая заметка',
                 items: [
@@ -92,7 +95,66 @@ Vue.component('columns', {
                 default:
                     return '';
             }
+        },
+
+        methods: {
+            // перемещение в процессе
+            moveCardToInProgress(card) {
+                const index = this.newColumn.indexOf(card);
+                if (index !== -1) {
+                    if (this.inProgressColumn.length >= this.maxCards.inProgressColumn) {
+                        return;
+                    }
+                    this.newColumn.splice(index, 1);
+                    this.inProgressColumn.push(card);
+                    this.saveToLocalStorage();
+                }
+            },
+
+            // перемещение в завершено
+            moveCardToCompleted(card) {
+                const index = this.inProgressColumn.indexOf(card);
+                if (index !== -1) {
+                    this.inProgressColumn.splice(index, 1);
+                    this.completedColumn.push(card);
+                    this.saveToLocalStorage();
+                }
+            },
+
+            // обновление прогресса карточки
+            updateCardProgress(card, progress) {
+                if (progress >= 50 && progress < 100) {
+                    // перемещение карточки из первого столбца во второй столбец
+                    this.moveCardToInProgress(card);
+                } else if (progress === 100) {
+                    // перемещение карточки из второго столбца в третий столбец
+                    this.moveCardToCompleted(card);
+                }
+            }
         }
+
+        // // перемещение в процессе
+        // moveCardToInProgress(card){
+        //     const index = this.newColumn.indexOf(card);
+        //     if (index !==-1){
+        //         if (this.inProgressColumn.length >= this.maxCards.inProgressColumn){
+        //             return;
+        //         }
+        //         this.newColumn.splice(index, 1);
+        //         this.inProgressColumn.push(card);
+        //         this.saveToLocalStorage();
+        //     }
+        // },
+        // // перемещение при завершении
+        // moveCardToCompleted(card){
+        //     const index = this.inProgressColumn.indexOf(card);
+        //     if (index !==-1){
+        //         this.completedColumn.push(card);
+        //         this.inProgressColumn.splice(index, 1);
+        //         this.saveToLocalStorage();
+        //     }
+        // },
+
     }
 });
 
@@ -102,19 +164,27 @@ Vue.component('column', {
       <div class="column">
       <h2>{{ title }}</h2>
       <card v-for="(card, index) in cards" :key="index" :card="card" @delete-card="deleteCard(index)" @save-local-storage="saveToLocalStorage"></card>
-      <button class="add" v-if="title === 'Новые'" @click="addCardWithCustomTitle">Добавить заметку</button>
+      <form action="" v-if="title === 'Новые'">
+        <input type="text" v-model="customTitle">
+        <button class="add" @click="addCardWithCustomTitle">Добавить заметку</button>
+      </form>
       </div>
     `,
+    data() {
+        return {
+            customTitle: ''
+        };
+    },
     methods: {
         deleteCard(cardIndex) {
             this.$emit('delete-card', cardIndex);
         },
+        // Добавление заголовка для новой карточки
         addCardWithCustomTitle() {
-            const customTitle = prompt('Введите заголовок для новой заметки:');
-            if (customTitle) {
-                this.$emit('add-card', customTitle);
-            }
-        },
+                if (this.customTitle) {
+                    this.$emit('add-card', this.customTitle);
+                }
+            },
         saveToLocalStorage() {
             this.$emit('save-local-storage');
         }
@@ -124,23 +194,43 @@ Vue.component('column', {
 Vue.component('card', {
     props: ['card'],
     template: `
+<!--Поле ввода сохранение по умолчанию-->
       <div class="card">
       <h3>{{ card.title }}</h3>
       <ul>
         <li v-for="(item, index) in card.items" :key="index">
-          <input type="text" v-model="item.text" :disabled="!item.editing">
           <input type="checkbox" v-model="item.completed" @change="saveToLocalStorage">
+          <input type="text" v-model="item.text" :disabled="!item.editing" @change="saveToLocalStorage">
           <button @click="saveItem(index)" v-if="item.editing">Сохранить</button>
           <button @click="editItem(index)" v-else>Редактировать</button>
-          <button @click="deleteItem(index)">Удалить</button>
         </li>
         <li v-if="card.items.length < 5 && card.status !== 'Закоченные'">
-          <button @click="addItem">Добавить пункт</button>
+          <!-- <button @click="addItem">Добавить пункт</button> -->
         </li>
       </ul>
-      <button v-if="card.status !== 'Закоченные'" @click="deleteCard">Удалить заметку</button>
       <p v-if="card.status === 'Закоченные'">Дата завершения: {{ card.completionDate }}</p>
       </div>
+<!--      <div class="card">-->
+<!--      <h3>{{ card.title }}</h3>-->
+<!--      <ul>-->
+<!--        <li v-for="(item, index) in card.items" :key="index">-->
+<!--&lt;!&ndash;          Сохранение чекбоксов&ndash;&gt;-->
+<!--          <input type="checkbox" v-model="item.completed" @change="saveToLocalStorage">-->
+<!--&lt;!&ndash;          текст задачи&ndash;&gt;-->
+<!--          <input type="text" v-model="item.text"  :disabled="!item.editing">-->
+<!--          <button @click="saveItem(index)" v-if="item.editing">Сохранить</button>-->
+<!--          <button @click="editItem(index)" v-else>Редактировать</button>-->
+<!--&lt;!&ndash;          <button @click="deleteItem(index)">Удалить</button>&ndash;&gt;-->
+<!--        </li>-->
+<!--        <li v-if="card.items.length < 5 && card.status !== 'Закоченные'">-->
+<!--&lt;!&ndash;          кнопка добавить пункт&ndash;&gt;-->
+<!--&lt;!&ndash;          <button @click="addItem">Добавить пункт</button>&ndash;&gt;-->
+<!--        </li>-->
+<!--      </ul>-->
+<!--&lt;!&ndash;      Кнопка удаления заметки&ndash;&gt;-->
+<!--&lt;!&ndash;      <button v-if="card.status !== 'Закоченные'" @click="deleteCard">Удалить заметку</button>&ndash;&gt;-->
+<!--      <p v-if="card.status === 'Закоченные'">Дата завершения: {{ card.completionDate }}</p>-->
+<!--      </div>-->
     `,
     methods: {
         addItem() {
