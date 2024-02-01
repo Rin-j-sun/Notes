@@ -1,4 +1,4 @@
-Vue.component('todo-item', {
+Vue.component('notes-item', {
     template: '\
 <li>\
 {{ title }}\
