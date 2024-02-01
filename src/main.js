@@ -11,7 +11,7 @@ Vue.component('notes-item', {
 Vue.component('columns', {
     template: `
       <div class="columns">
-      <column title="Новые" :cards="newColumn" @add-card="addCard('newColumn', $event)" @delete-card="deleteCard('newColumn', $event)" @save-local-storage="saveToLocalStorage" @move-card-to-in-progress="moveCardToInProgress" @move-card-to-completed="moveCardToCompleted"></column>
+      <column title="Новые" class="" :cards="newColumn" @add-card="addCard('newColumn', $event)" @delete-card="deleteCard('newColumn', $event)" @save-local-storage="saveToLocalStorage" @move-card-to-in-progress="moveCardToInProgress" @move-card-to-completed="moveCardToCompleted"></column>
       <column title="В процессе" :cards="inProgressColumn" @delete-card="deleteCard('inProgressColumn', $event)" @save-local-storage="saveToLocalStorage" @move-card-to-in-progress="moveCardToInProgress" @move-card-to-completed="moveCardToCompleted" @lock-first-column="lockFirstColumn"></column>
       <column title="Выполненные" :cards="completedColumn" @delete-card="deleteCard('completedColumn', $event)" @save-local-storage="saveToLocalStorage"></column>
       </div>
@@ -39,6 +39,7 @@ Vue.component('columns', {
                 alert(`Слишком много пунктов.`);
                 return;
             }
+            // Предупреждение о количестве заметок
             if (this[column].length >= this.maxCards[column]) {
                 alert(`Слишком много пунктов "${this.getColumnTitle(column)}".`);
                 return;
@@ -86,10 +87,13 @@ Vue.component('columns', {
             switch (column) {
                 case 'newColumn':
                     return 'Новые';
+
                 case 'inProgressColumn':
                     return 'В процессе';
+
                 case 'completedColumn':
                     return 'Выполненные';
+
                 default:
                     return '';
             }
@@ -98,13 +102,13 @@ Vue.component('columns', {
             const index = this.newColumn.indexOf(card);
             if (index !== -1) {
                 if (this.inProgressColumn.length >= this.maxCards.inProgressColumn) {
-                    alert('Столбец "В процессе" уже содержит максимальное количество карточек.');
-                    return;
+                    return true;
                 }
 
                 this.newColumn.splice(index, 1);
                 this.inProgressColumn.push(card);
                 this.saveToLocalStorage();
+
 
                 // Проверяем количество карточек в столбце "В процессе" и блокируем первый столбец, если необходимо
                 if (this.inProgressColumn.length >= this.maxCards.inProgressColumn) {
@@ -121,7 +125,7 @@ Vue.component('columns', {
             }
         },
         lockFirstColumn() {
-            this.isFirstColumnLocked = true;
+            this.card.status = 'Выполненные';
         }
     }
 });
@@ -136,7 +140,7 @@ Vue.component('column', {
       <card v-for="(card, index) in cards" :key="index" :card="card" @delete-card="deleteCard(index)" @save-local-storage="saveToLocalStorage" @move-card-to-in-progress="moveCardToInProgress" @move-card-to-completed="moveCardToCompleted"></card>
       <form action="" v-if="title === 'Новые'">
         <input type="text" v-model="customTitle">
-        <button v-if="title === 'Новые'" @click="addCardWithCustomTitle">Добавить заметку</button>
+        <button v-if="title !== 'В процессе' && title !== 'В процессе'" @click="addCardWithCustomTitle">Добавить заметку</button>
       </form>
       </div>
     `,
@@ -169,30 +173,55 @@ Vue.component('column', {
 });
 
 Vue.component('card', {
-    props: ['card', 'isFirstColumnLocked'],
+    props: ['card', 'isFirstColumnLocked', 'title'],
     template: `
       <div class="card">
       <h3>{{ card.title }}</h3>
       <ul>
         <li v-for="(item, index) in card.items" :key="index">
 <!--          Сохранение чекбокса при перезагрузке страницы-->
-          <input type="checkbox" v-model="item.completed" @change="saveToLocalStorage" :disabled="card.status === 'Выполненные' || isFirstColumnLocked">
+          <input type="checkbox" id="actch" v-model="item.completed" @change="saveToLocalStorage" :disabled="card.status === 'Выполненные' || isFirstColumnLocked">
           <!--          Сохранение текста при перезагрузке страницы-->
-          <input type="text" v-model="item.text" @input="saveToLocalStorage" :disabled="!item.editing || card.status === 'Выполненные' || (card.status === 'В процессе' && isFirstColumnLocked)">
+
+          <input type="text" id="it" v-model="item.text" @input="saveToLocalStorage" :disabled="!item.editing && item.isInputDisabled || card.status !== 'Новые' || (card.status === 'В процессе' && isFirstColumnLocked)">
+<!--          <label v-if="actCheck" for="it">Дата завершения: {{ card.completionDate }}</label>-->
 <!--          <button @click="saveItem(index)" v-if="item.editing && card.status !== 'Выполненные' && !isFirstColumnLocked">Сохранить</button>-->
           <button @click="editItem(index)" v-else-if="!item.editing && card.status !== 'Выполненные' && !isFirstColumnLocked">Редактировать</button>
           <button @click="deleteItem(index)" v-if="card.items.length > 3 && !isFirstColumnLocked && card.status !== 'Выполненные'">Удалить</button>
         </li>
+        
+        
+        
+        
+        
+        
 <!--        Кнопка добавление нового пункта-->
-<!--        <li v-if="card.items.length < 5 && card.status !== 'Выполненные' && !isFirstColumnLocked">-->
-<!--          <button @click="addItem">Добавить пункт</button>-->
-<!--        </li>-->
+        <li v-if="card.items.length < 5 && card.status !== 'Выполненные' && card.status !== 'В процессе' && !isFirstColumnLocked && title === 'Новые'">
+          <button class="punkt" @click="addItem">Добавить пункт</button>
+        </li>
       </ul> 
+        
+        
 <!--      кнопка удаления заметки-->
-<!--      <button v-if="card.status !== 'Выполненные' && !isFirstColumnLocked" @click="deleteCard">Удалить заметку</button>-->
+      <button v-if="title === 'Новые'" @click="deleteCard">Удалить заметку</button>
+<!--        <p v-if="checkbox.status === 'Выполненные'">Дата завершения: {{ item.completionDate }}</p>-->
       <p v-if="card.status === 'Выполненные'">Дата завершения: {{ card.completionDate }}</p>
+        
       </div>
     `,
+
+    data() {
+        return {
+            card: {
+                items: [
+                    { text: '', completed: false, editing: false, isInputDisabled: true },
+                ],
+
+            },
+
+        }
+    },
+
     methods: {
         addItem() {
             if (this.card.items.length < 5 && this.card.items.length >= 3 && !this.isFirstColumnLocked) {
@@ -217,15 +246,17 @@ Vue.component('card', {
         },
         saveItem(index) {
             if (this.card.status !== 'Выполненные' && !this.isFirstColumnLocked) {
-                this.card.items[index].editing = false;
+                this.card.items[index].editing = true;
                 this.saveToLocalStorage();
             }
         },
+
+        // сохранение текста
         editItem(index) {
-            if (this.card.status !== 'Выполненные' && !this.isFirstColumnLocked) {
-                this.card.items[index].editing = true;
-            }
+            this.card.items[index].isInputDisabled = false;
+            this.card.items[index].editing = !this.card.items[index].editing;
         },
+
         saveToLocalStorage() {
             this.checkCardStatus();
             this.$emit('save-local-storage');
@@ -235,11 +266,17 @@ Vue.component('card', {
             const totalItems = this.card.items.length;
             const completionPercentage = (completedItems / totalItems) * 100;
 
-            if (completionPercentage >= 100) {
-                this.card.status = 'Выполненные';
-                this.card.completionDate = new Date().toLocaleString();
-                this.$emit('move-card-to-completed', this.card);
-            } else if (completionPercentage > 50 && this.card.status === 'Новые' && this.isFirstColumnLocked) {
+ // Смена статусов карточек
+            if (completionPercentage > 50 ) {
+                this.card.status = 'В процессе';
+                this.$emit('move-card-to-in-progress', this.card);
+                if (completionPercentage >= 100) {
+                    this.card.status = 'Выполненные';
+                    this.card.completionDate = new Date().toLocaleString();
+                    this.$emit('move-card-to-completed', this.card);
+                }
+            }
+            else if (completionPercentage > 50 && this.card.status === 'В процессе' && this.isFirstColumnLocked) {
                 this.$emit('lock-first-column');
             } else if (completionPercentage > 50 && this.card.status === 'Новые') {
                 this.$emit('move-card-to-in-progress', this.card);
@@ -249,7 +286,15 @@ Vue.component('card', {
                 this.card.status = 'Новые';
             }
         }
-    }
+    },
+
+    // Вычисление даты завершения пункта
+//     computed: {
+//         actCheck(){
+//             const checkbox = document.getElementById('actch');
+//                 return checkbox.checked;
+//         }
+//     }
 });
 
 new Vue({
