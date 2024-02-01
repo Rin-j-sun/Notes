@@ -112,7 +112,7 @@ Vue.component('columns','card',  {
 
                 // Проверяем количество карточек в столбце "В процессе" и блокируем первый столбец, если необходимо
                 if (this.inProgressColumn.length >= this.maxCards.inProgressColumn) {
-                    this.isFirstColumnLocked = true;
+                    // this.card.status = 'Выполненные';
                 }
             }
         },
